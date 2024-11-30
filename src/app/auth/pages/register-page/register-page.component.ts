@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { cantBeStrider } from '../../../shared/validators/validators.functions';
+import { ValidatorsService } from '../../../shared/service/validator.service';
+import { EmailValidatorService } from '../../../shared/validators/emaio-validator.service';
+//import * as customValidator from '../../../shared/validators/validators.functions';
 
 @Component({
   selector: 'app-register-page',
@@ -11,23 +13,35 @@ import { cantBeStrider } from '../../../shared/validators/validators.functions';
 })
 export class RegisterPageComponent {
 
-  private fb: FormBuilder =  new FormBuilder();
+  //private fb: FormBuilder =  new FormBuilder();
+  public myForm!: FormGroup;
 
-  public myform = this.fb.group({
-    name: ['',[Validators.required]],
-    email: ['', Validators.required],
-    uername: ['', [Validators.required, cantBeStrider]],
-    password: ['', Validators.required, Validators.minLength(6)],
-    password2: ['', Validators.required],
-  });
+  constructor(private fb: FormBuilder, private validatorsService: ValidatorsService, private emailValidatorService:EmailValidatorService ){
+
+    this.myForm = this.fb.group({
+      name: ['',[Validators.required, Validators.pattern(this.validatorsService.firstNameAndLastnamePattern)]],
+      //email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.pattern(this.validatorsService.emailPattern)], [emailValidatorService.validate]],
+      username: ['', [Validators.required, this.validatorsService.cantBeStrider]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      password2: ['', [Validators.required, Validators.minLength(6)]],
+    },
+    {
+      validators: [
+        validatorsService.isFieldOneEqualFieldTwo('password','password2')
+      ]
+    });
+  }
 
 
   onSave(): void{
-      this.myform.markAllAsTouched();
+      this.myForm.markAllAsTouched();
   }
 
-  isValidField(field: string): void{
-
+  isValidField(field: string): boolean | null{
+    console.log(`campo: ${field} valor: ${this.validatorsService.isValidField(this.myForm,field)}`);
+     return this.validatorsService.isValidField(this.myForm,field);
   }
+
 
 }
